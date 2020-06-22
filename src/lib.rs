@@ -25,32 +25,6 @@ pub struct Universe {
     cells: Vec<Cell>,
 }
 
-impl Universe {
-    fn get_index(&self, row: u32, column: u32) -> usize {
-        (self.width * row + column) as usize
-    }
-
-    // cell neighbors as iterator?
-    // fn neighbors(&self, row: u32, col: u32) {
-    // }
-
-    fn live_neighbor_count(&self, row: u32, col: u32) -> u8 {
-        let mut count = 0;
-        for dr in [self.height - 1, 0, 1].iter().cloned() {
-            for dc in [self.width - 1, 0, 1].iter().cloned() {
-                if dr == 0 && dc == 0 {
-                    continue;
-                }
-                let nr = (row + dr) % self.height;
-                let nc = (col + dc) % self.width;
-                let i = self.get_index(nr, nc);
-                count += self.cells[i] as u8;
-            }
-        }
-        count
-    }
-}
-
 impl fmt::Display for Universe {
     fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
         for line in self.cells.as_slice().chunks(self.width as usize) {
@@ -65,6 +39,53 @@ impl fmt::Display for Universe {
         }
 
         Ok(())
+    }
+}
+
+impl Universe {
+
+    fn get_index(&self, row: u32, column: u32) -> usize {
+        (self.width * row + column) as usize
+    }
+
+    pub fn get_cells(&self) -> &[Cell] {
+        &self.cells
+    }
+
+    pub fn spawn_cells(&mut self, cells: &[(u32, u32)]) {
+        for (row, col) in cells.iter().cloned() {
+            let idx = self.get_index(row, col);
+            self.spawn_cell(idx);
+        }
+    }
+
+    pub fn spawn_cell(&mut self, idx: usize) {
+        self.cells[idx] = Cell::Alive;
+    }
+
+    pub fn kill_cells(&mut self, cells: &[(u32, u32)]) {
+        for (row, col) in cells.iter().cloned() {
+            let idx = self.get_index(row, col);
+            self.kill_cell(idx);
+        }
+    }
+
+    pub fn kill_cell(&mut self, idx: usize) {
+        self.cells[idx] = Cell::Dead;
+    }
+
+    pub fn toggle_cells(&mut self, cells: &[(u32, u32)]) {
+        for (row, col) in cells.iter().cloned() {
+            let idx = self.get_index(row, col);
+            self.toggle_cell(idx);
+        }
+    }
+
+    pub fn toggle_cell(&mut self, idx: usize) {
+        self.cells[idx] = match self.cells[idx] {
+            Cell::Alive => Cell::Dead,
+            Cell::Dead => Cell::Alive
+        }
     }
 }
 
@@ -113,6 +134,22 @@ impl Universe {
         self.cells = next;
     }
 
+    pub fn set_width(&mut self, width: u32) {
+        self.width = width;
+        self.resize()
+    }
+
+    pub fn set_height(&mut self, height: u32) {
+        self.height = height;
+        self.resize()
+    }
+
+    fn resize(&mut self) {
+        self.cells = (0..self.width*self.height)
+            .map(|_i| Cell::Dead)
+            .collect();
+    }
+
     pub fn width(&self) -> u32 {
         self.width
     }
@@ -127,5 +164,25 @@ impl Universe {
 
     pub fn render(&self) -> String {
         self.to_string()
+    }
+
+    // cell neighbors as iterator?
+    // fn neighbors(&self, row: u32, col: u32) {
+    // }
+
+    fn live_neighbor_count(&self, row: u32, col: u32) -> u8 {
+        let mut count = 0;
+        for dr in [self.height - 1, 0, 1].iter().cloned() {
+            for dc in [self.width - 1, 0, 1].iter().cloned() {
+                if dr == 0 && dc == 0 {
+                    continue;
+                }
+                let nr = (row + dr) % self.height;
+                let nc = (col + dc) % self.width;
+                let i = self.get_index(nr, nc);
+                count += self.cells[i] as u8;
+            }
+        }
+        count
     }
 }
