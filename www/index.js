@@ -68,6 +68,7 @@ const drawCells = () => {
 };
 
 const renderLoop = () => {
+    // debugger;
     drawGrid();
     drawCells();
 
