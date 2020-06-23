@@ -85,12 +85,20 @@ playPauseButton.addEventListener("click", event => {
     fn();
 });
 
+const ticksPerFrameInput = document.getElementById('ticks-per-frame');
+let ticksPerFrame = parseInt(ticksPerFrameInput.value, 10);
+ticksPerFrameInput.addEventListener("input", event => {
+    ticksPerFrame = parseInt(ticksPerFrameInput.value, 10);
+});
+
 const renderLoop = () => {
     // debugger;
     drawGrid();
     drawCells();
 
-    universe.tick();
+    for (let i=0; i<ticksPerFrame; i++) {
+        universe.tick();
+    }
 
     animationId = requestAnimationFrame(renderLoop);
 };
