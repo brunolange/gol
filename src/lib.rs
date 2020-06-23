@@ -26,6 +26,15 @@ pub enum Cell {
     Alive = 1,
 }
 
+impl Cell {
+    pub fn toggle(&mut self) {
+        *self = match *self {
+            Cell::Alive => Cell::Dead,
+            Cell::Dead => Cell::Alive
+        }
+    }
+}
+
 #[wasm_bindgen]
 pub struct Universe {
     width: u32,
@@ -84,15 +93,7 @@ impl Universe {
 
     pub fn toggle_cells(&mut self, cells: &[(u32, u32)]) {
         for (row, col) in cells.iter().cloned() {
-            let idx = self.get_index(row, col);
-            self.toggle_cell(idx);
-        }
-    }
-
-    pub fn toggle_cell(&mut self, idx: usize) {
-        self.cells[idx] = match self.cells[idx] {
-            Cell::Alive => Cell::Dead,
-            Cell::Dead => Cell::Alive
+            self.toggle_cell(row, col);
         }
     }
 }
@@ -169,6 +170,11 @@ impl Universe {
 
     pub fn cells(&self) -> *const Cell {
         self.cells.as_ptr()
+    }
+
+    pub fn toggle_cell(&mut self, row: u32, col: u32) {
+        let idx = self.get_index(row, col);
+        self.cells[idx].toggle();
     }
 
     pub fn render(&self) -> String {
