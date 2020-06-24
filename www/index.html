@@ -23,12 +23,17 @@
         width:50px;
         margin-bottom:7px;
       }
+      #fps {
+        white-space: pre;
+        font-family: monospace;
+      }
     </style>
   </head>
   <body>
     <noscript>This page contains webassembly and javascript content, please enable javascript in your browser.</noscript>
     <button id="play-pause"></button>
     <input type="range" id="ticks-per-frame" min="1" max="12" value="1">
+    <div id="fps"></div>
     <canvas id="gol-canvas"></canvas>
     <script src="./bootstrap.js"></script>
   </body>
