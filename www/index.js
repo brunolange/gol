@@ -1,45 +1,6 @@
 import { memory } from "gol/gol_bg";
 import { Universe, Cell } from "gol";
-
-const fps = new class {
-    constructor() {
-        this.fps = document.getElementById('fps')
-        this.frames = [];
-        this.lastFrameTimestamp = performance.now();
-    }
-
-    render() {
-        const now = performance.now();
-        const delta = now - this.lastFrameTimestamp;
-        this.lastFrameTimestamp = now;
-        const fps = 1 / delta * 1000;
-
-        this.frames.push(fps);
-        if (this.frames.length > 100) {
-            this.frames.shift();
-        }
-
-        // Find the max, min, and mean of our 100 latest timings.
-        let min = Infinity;
-        let max = -Infinity;
-        let sum = 0;
-        for (let i = 0; i < this.frames.length; i++) {
-            sum += this.frames[i];
-            min = Math.min(this.frames[i], min);
-            max = Math.max(this.frames[i], max);
-        }
-        let mean = sum / this.frames.length;
-
-        // Render the statistics.
-        this.fps.textContent = `
-Frames per Second:
-         latest = ${Math.round(fps)}
-avg of last 100 = ${Math.round(mean)}
-min of last 100 = ${Math.round(min)}
-max of last 100 = ${Math.round(max)}
-`.trim();
-    }
-};
+import fps from "./fps";
 
 const CELL_SIZE = 8; // px
 const GRID_COLOR = "#CCCCCC";
