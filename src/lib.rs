@@ -1,17 +1,16 @@
+extern crate web_sys;
+extern crate js_sys;
+
 mod utils;
 
 use wasm_bindgen::prelude::*;
+use web_sys::console;
+use fixedbitset::FixedBitSet;
 
-// When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
-// allocator.
+// When the `wee_alloc` feature is enabled, use `wee_alloc` as the global allocator.
 #[cfg(feature = "wee_alloc")]
 #[global_allocator]
 static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
-
-extern crate web_sys;
-use web_sys::console;
-
-use fixedbitset::FixedBitSet;
 
 pub struct Timer<'a> {
     name: &'a str,
@@ -46,7 +45,8 @@ impl Universe {
 
         let mut cells = FixedBitSet::with_capacity((width*height) as usize);
         for i in 0..cells.len() {
-            cells.set(i, i%2 == 0 || i%7 == 0);
+            cells.set(i, js_sys::Math::random() >= 0.5);
+            // cells.set(i, i%2 == 0 || i%7 == 0);
         }
 
         Universe {
