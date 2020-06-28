@@ -80,9 +80,15 @@ const drawGrid = () => {
     ctx.stroke();
 };
 
+const isBitSet = (n, arr) => {
+    const byte = Math.floor(n / 8);
+    const mask = 1 << (n % 8);
+    return (arr[byte] & mask) === mask;
+  };
+
 const drawCells = () => {
     const cellsPtr = universe.cells();
-    const cells = new Uint8Array(memory.buffer, cellsPtr, width * height);
+    const cells = new Uint8Array(memory.buffer, cellsPtr, width * height / 8);
 
     ctx.beginPath();
 
@@ -90,10 +96,9 @@ const drawCells = () => {
         for (let col=0; col < width; col++) {
             const idx = getIndex(row, col);
 
-            ctx.fillStyle = cells[idx] === Cell.Dead
-                ? DEAD_COLOR
-                : ALIVE_COLOR
-            ;
+            ctx.fillStyle = isBitSet(idx, cells)
+                ? ALIVE_COLOR
+                : DEAD_COLOR;
 
             ctx.fillRect(
                 col * (CELL_SIZE + 1) + 1,

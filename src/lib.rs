@@ -1,7 +1,6 @@
 mod utils;
 
 use wasm_bindgen::prelude::*;
-use std::fmt;
 
 // When the `wee_alloc` feature is enabled, use `wee_alloc` as the global
 // allocator.
@@ -12,6 +11,7 @@ static ALLOC: wee_alloc::WeeAlloc = wee_alloc::WeeAlloc::INIT;
 extern crate web_sys;
 use web_sys::console;
 
+use fixedbitset::FixedBitSet;
 
 pub struct Timer<'a> {
     name: &'a str,
@@ -30,92 +30,11 @@ impl <'a> Drop for Timer<'a> {
     }
 }
 
-
-// A macro to provide `println!(..)`-style syntax for `console.log` logging.
-macro_rules! log {
-    ( $( $t:tt )* ) => {
-        web_sys::console::log_1(&format!( $( $t )* ).into());
-    };
-}
-
-#[wasm_bindgen]
-#[repr(u8)]
-#[derive(Clone, Copy, Debug, PartialEq, Eq)]
-pub enum Cell {
-    Dead = 0,
-    Alive = 1,
-}
-
-impl Cell {
-    pub fn toggle(&mut self) {
-        *self = match *self {
-            Cell::Alive => Cell::Dead,
-            Cell::Dead => Cell::Alive
-        }
-    }
-}
-
 #[wasm_bindgen]
 pub struct Universe {
     width: u32,
     height: u32,
-    cells: Vec<Cell>,
-}
-
-impl fmt::Display for Universe {
-    fn fmt(&self, f: &mut fmt::Formatter) -> fmt::Result {
-        for line in self.cells.as_slice().chunks(self.width as usize) {
-            for &cell in line {
-                let symbol = match cell {
-                    Cell::Dead => '◻',
-                    Cell::Alive => '◼',
-                };
-                write!(f, "{}", symbol)?;
-            }
-            write!(f, "{}", "\n")?;
-        }
-
-        Ok(())
-    }
-}
-
-impl Universe {
-
-    fn get_index(&self, row: u32, column: u32) -> usize {
-        (self.width * row + column) as usize
-    }
-
-    pub fn get_cells(&self) -> &[Cell] {
-        &self.cells
-    }
-
-    pub fn spawn_cells(&mut self, cells: &[(u32, u32)]) {
-        for (row, col) in cells.iter().cloned() {
-            let idx = self.get_index(row, col);
-            self.spawn_cell(idx);
-        }
-    }
-
-    pub fn spawn_cell(&mut self, idx: usize) {
-        self.cells[idx] = Cell::Alive;
-    }
-
-    pub fn kill_cells(&mut self, cells: &[(u32, u32)]) {
-        for (row, col) in cells.iter().cloned() {
-            let idx = self.get_index(row, col);
-            self.kill_cell(idx);
-        }
-    }
-
-    pub fn kill_cell(&mut self, idx: usize) {
-        self.cells[idx] = Cell::Dead;
-    }
-
-    pub fn toggle_cells(&mut self, cells: &[(u32, u32)]) {
-        for (row, col) in cells.iter().cloned() {
-            self.toggle_cell(row, col);
-        }
-    }
+    cells: FixedBitSet
 }
 
 #[wasm_bindgen]
@@ -125,16 +44,10 @@ impl Universe {
         let width = 64;
         let height = 64;
 
-        let cells = (0..width * height)
-            .map(|i| {
-                if i%2 == 0 || i%7 == 0 {
-                    Cell::Alive
-                } else {
-                    Cell::Dead
-                }
-            })
-            .collect()
-        ;
+        let mut cells = FixedBitSet::with_capacity((width*height) as usize);
+        for i in 0..cells.len() {
+            cells.set(i, i%2 == 0 || i%7 == 0);
+        }
 
         Universe {
             width,
@@ -153,32 +66,16 @@ impl Universe {
                 let cell = self.cells[i];
                 let live_neighbors = self.live_neighbor_count(row, col);
                 let next_cell = match (cell, live_neighbors) {
-                    (Cell::Alive, n) if n < 2 || n > 3 => Cell::Dead,
-                    (Cell::Dead, 3) => Cell::Alive,
+                    (true, n) if n < 2 || n > 3 => false,
+                    (false, 3) => true,
                     (otherwise, _) => otherwise,
                 };
 
-                next[i] = next_cell;
+                next.set(i, next_cell);
             }
         }
 
         self.cells = next;
-    }
-
-    pub fn set_width(&mut self, width: u32) {
-        self.width = width;
-        self.resize()
-    }
-
-    pub fn set_height(&mut self, height: u32) {
-        self.height = height;
-        self.resize()
-    }
-
-    fn resize(&mut self) {
-        self.cells = (0..self.width*self.height)
-            .map(|_i| Cell::Dead)
-            .collect();
     }
 
     pub fn width(&self) -> u32 {
@@ -189,23 +86,30 @@ impl Universe {
         self.height
     }
 
-    pub fn cells(&self) -> *const Cell {
-        self.cells.as_ptr()
+    pub fn cells(&self) -> *const u32 {
+        self.cells.as_slice().as_ptr()
     }
 
     pub fn toggle_cell(&mut self, row: u32, col: u32) {
         let idx = self.get_index(row, col);
-        self.cells[idx].toggle();
+        let state = self.cells[idx];
+        self.cells.set(idx, !state);
+    }
+}
+
+impl Universe {
+
+    pub fn get_cells(&self) -> &FixedBitSet {
+        &self.cells
     }
 
-    pub fn render(&self) -> String {
-        self.to_string()
+    fn get_index(&self, row: u32, column: u32) -> usize {
+        (self.width * row + column) as usize
     }
 
     // cell neighbors as iterator?
     // fn neighbors(&self, row: u32, col: u32) {
     // }
-
     fn live_neighbor_count(&self, row: u32, col: u32) -> u8 {
         let mut count = 0;
         for dr in [self.height - 1, 0, 1].iter().cloned() {
