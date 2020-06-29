@@ -100,14 +100,20 @@ ticksPerFrameInput.addEventListener("input", event => {
 const reset = document.getElementById('reset')
 reset.addEventListener('click', () => {
     universe.reset();
+    draw();
+    animationId = requestAnimationFrame();
 });
+
+const draw = () => {
+    drawGrid();
+    drawCells();
+}
 
 const renderLoop = () => {
     // debugger;
     fps.render()
 
-    drawGrid();
-    drawCells();
+    draw();
 
     for (let i=0; i<ticksPerFrame; i++) {
         universe.tick();
