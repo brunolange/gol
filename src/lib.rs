@@ -45,7 +45,6 @@ impl Universe {
 
         let mut cells = FixedBitSet::with_capacity((width*height) as usize);
         for i in 0..cells.len() {
-            // cells.set(i, js_sys::Math::random() >= 0.5);
             cells.set(i, i%2 == 0 || i%7 == 0);
         }
 
@@ -58,7 +57,7 @@ impl Universe {
 
     pub fn reset(&mut self) {
         for i in 0..self.cells.len() {
-            self.cells.set(i, js_sys::Math::random() >= 0.5);
+            self.cells.set(i, js_sys::Math::random() >= 0.85);
         }
     }
 
