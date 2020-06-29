@@ -97,6 +97,11 @@ ticksPerFrameInput.addEventListener("input", event => {
     ticksPerFrame = parseInt(ticksPerFrameInput.value, 10);
 });
 
+const reset = document.getElementById('reset')
+reset.addEventListener('click', () => {
+    universe.reset();
+});
+
 const renderLoop = () => {
     // debugger;
     fps.render()

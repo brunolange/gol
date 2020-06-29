@@ -56,6 +56,12 @@ impl Universe {
         }
     }
 
+    pub fn reset(&mut self) {
+        for i in 0..self.cells.len() {
+            self.cells.set(i, js_sys::Math::random() >= 0.5);
+        }
+    }
+
     pub fn tick(&mut self) {
         let _timer = Timer::new("Universe::tick");
         let mut next = self.cells.clone();
