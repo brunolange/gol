@@ -30,7 +30,7 @@ const drawGrid = () => {
         ctx.lineTo(x, bottom);
     }
 
-    //horization lines
+    // horizontal lines
     const right = (CELL_SIZE + 1) * width + 1;
     for (let j = 0; j <= height; j++) {
         const y = j * (CELL_SIZE + 1) + 1;
